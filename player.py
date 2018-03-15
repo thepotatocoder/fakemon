@@ -6,19 +6,20 @@ from muhmap import berry_colision
 START_POS = 8 * stg.SCALE, 24 * stg.SCALE
 SIZE_EACH = 16 * stg.SCALE, 32 * stg.SCALE
 SPRITESHEET_PATH = 'media/playeroverworld.png'
-MOVE_TICKS = stg.TARGET_FPS/15/4
-ANIM_TICKS = 30 * stg.TARGET_FPS/15/4
+MOVE_TICKS = 60/15/4
+ANIM_TICKS = 30 * 60/15/4
 
 anim_down = 0, 3
 anim_up = 4, 7
 anim_left = 8, 11
 anim_right = 12, 15
 
-class Player(GameObject):
+class Player(pygame.sprite.DirtySprite):
 
 	def __init__(self, spritesheet, pos=(0,0)):
-		super().__init__(pos)
-		#self.pos = (self.pos[0], self.pos[1]+1) #Sprite workaround
+		super().__init__()
+		self.pos = pos
+		self.dirty = 2
 		self.sprite = []
 		wheres = [(8,24), (24,24), (40,24), (24,24),
 				  (8,56), (24,56), (40,56), (24,56),
@@ -32,7 +33,7 @@ class Player(GameObject):
 			self.sprite.append(pygame.transform.flip(self.sprite[i], True, False))
 		
 		print(len(self.sprite))
-		#print(len(self.sprite))
+		
 		self.min_frame = anim_down[0]
 		self.curr_frame = anim_down[0]
 		self.max_frame = anim_down[1]
@@ -45,8 +46,12 @@ class Player(GameObject):
 		self.curr_anim = 'down'
 		self.move_tick = MOVE_TICKS
 		self.anim_tick = ANIM_TICKS
-
-	def input(self, keys):
+	
+		self.image = self.sprite[self.curr_frame]
+		self.rect = self.image.get_rect()
+		self.rect.midleft = self.pos
+		
+	def input(self, keys, map):
 		if not self.moving:
 			self.idle = False
 			self.colliding = False
@@ -59,7 +64,7 @@ class Player(GameObject):
 					self.max_frame = anim_left[1]
 				
 				self.target_pos = self.pos[0] - stg.GRID_SIZE, self.pos[1]	
-				if berry_colision((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
+				if map.collision_map((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
 					self.target_pos = self.pos
 					self.colliding = True
 				else:
@@ -74,7 +79,7 @@ class Player(GameObject):
 					self.max_frame = anim_right[1]
 				
 				self.target_pos = self.pos[0] + stg.GRID_SIZE, self.pos[1]
-				if berry_colision((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
+				if map.collision_map((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
 					self.target_pos = self.pos
 					self.colliding = True
 				else:
@@ -90,7 +95,7 @@ class Player(GameObject):
 					self.max_frame = anim_down[1]
 				
 				self.target_pos = self.pos[0], self.pos[1] + stg.GRID_SIZE
-				if berry_colision((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
+				if map.collision_map((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
 					self.target_pos = self.pos
 					self.colliding = True
 				else:
@@ -107,7 +112,7 @@ class Player(GameObject):
 					self.max_frame = anim_up[1]
 				
 				self.target_pos = self.pos[0], self.pos[1] - stg.GRID_SIZE
-				if berry_colision((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
+				if map.collision_map((self.target_pos[0]/stg.GRID_SIZE, self.target_pos[1]/stg.GRID_SIZE)):
 					self.target_pos = self.pos
 					self.colliding = True
 				else:
@@ -148,4 +153,7 @@ class Player(GameObject):
 			if self.idle or self.colliding:
 				self.curr_frame = self.min_frame + 1
 			self.move_tick = MOVE_TICKS
+		
+		self.image = self.sprite[self.curr_frame]
+		self.rect.midleft = self.pos
 
